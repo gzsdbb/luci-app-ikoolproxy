@@ -9,7 +9,7 @@ e.rows = 28
 e.wrap = "off"
 
 local fs = require "nixio.fs"
-local i = "/etc/adblocklist/adbypass"
+local i = "/usr/share/koolproxy/data/adblocklist/adbypass"
 
 function e.cfgvalue()
 	return fs.readfile(i) or ""
@@ -22,7 +22,7 @@ function e.write(self, section, value)
 		value = ""
 	end
 	fs.writefile("/tmp/adbypass", value)
-	if (luci.sys.call("cmp -s /tmp/adbypass /etc/adblocklist/adbypass") == 1) then
+	if (luci.sys.call("cmp -s /tmp/adbypass /usr/share/koolproxy/data/adblocklist/adbypass") == 1) then
 		fs.writefile(i, value)
 	end
 	fs.remove("/tmp/adbypass")
