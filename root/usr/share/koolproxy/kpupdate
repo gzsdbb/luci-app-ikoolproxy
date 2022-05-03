@@ -40,9 +40,9 @@ restart_koolproxy() {
 
 update_rules() {
 	echo $(date "+%F %T"): ------------------- 内置规则更新 >>$LOGFILE
-	url_koolproxy="http://router.houzi-blog.top:3090/koolproxy.txt"
-	url_kpdaily="http://router.houzi-blog.top:3090/daily.txt"
-	url_kpvideo="http://router.houzi-blog.top:3090/kp.dat"
+	url_koolproxy="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/koolproxy.txt"
+	url_kpdaily="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/daily.txt"
+	url_kpvideo="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/kp.dat"
 	url_adguard="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/adg.txt"
 	url_steven="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/steven.txt"
 	url_yhosts="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/yhosts.txt"
