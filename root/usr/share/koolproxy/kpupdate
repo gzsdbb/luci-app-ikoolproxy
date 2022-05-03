@@ -7,6 +7,8 @@ CONFIG=koolproxy
 KP_DIR=/usr/share/koolproxy
 TMP_DIR=/tmp/koolproxy
 LOGFILE="/var/log/koolproxy.log"
+koolproxy_mode=$(config_t_get global koolproxy_mode 1)
+koolproxy_host=$(config_t_get global koolproxy_host 0)
 
 config_t_get() {
 	local index=0
@@ -28,7 +30,7 @@ limit_log() {
 }
 
 init_env() {
-	rm -rf "$TMP_DIR"
+	rm -rf "$LOGFILE"
 	mkdir -p "$TMP_DIR"
 }
 
@@ -36,111 +38,307 @@ restart_koolproxy() {
 	/etc/init.d/koolproxy restart
 }
 
-__compare_file() {
-	local descript=$1
-	local localPath=$2
-	local remoteUrl=$3
-
-	echo $(date "+%F %T"): ------------------- $descript更新 ------------------- >>$LOGFILE
-	local filename=`basename $localPath`
-	local remotePath="$TMP_DIR/$filename"
-	wget "$remoteUrl" -q -O "$remotePath"
-	if [ "$?" == "0" ]; then
-		if [ -f "$localPath" ]; then
-			localMD5=`md5sum "$localPath" | awk '{print $1}'`
-			localNum=`cat "$localPath" | grep -v '^!' | wc -l`
-		else
-			localMD5="文件不存在"
-			localNum="0"
-		fi
-		remoteMD5=`md5sum "$remotePath" | awk '{print $1}'`
-		remoteNum=`cat "$remotePath" | grep -v '^!' | wc -l`
-
-		echo $(date "+%F %T"): 本地版本MD5：$localMD5 >>$LOGFILE
-		echo $(date "+%F %T"): 本地版本条数：$localNum >>$LOGFILE
-		echo >>$LOGFILE
-		echo $(date "+%F %T"): 在线版本MD5：$remoteMD5 >>$LOGFILE
-		echo $(date "+%F %T"): 在线版本条数：$remoteNum >>$LOGFILE
-		echo >>$LOGFILE
-
-		if [ "$localMD5" != "$remoteMD5" ];then
-			echo $(date "+%F %T"): 检测到更新，开始更新规则！ >>$LOGFILE
-			mv -f "$remotePath" "$localPath"
-			echo $(date "+%F %T"): 更新成功！ >>$LOGFILE
-			echo >>$LOGFILE
-			return 0
-		fi
-	else
-		echo "$(date "+%F %T"): 获取在线版本时出现错误! " >>$LOGFILE
-		echo >>$LOGFILE
-	fi
-	return 1
-}
-
-__update_rule() {
-	local name
-	local file
-	local exrule
-	local enable
-	config_get name $1 name
-	config_get file $1 file
-	config_get exrule $1 url
-	config_get enable $1 load
-	if [ -n "$file" ] && [ -n "$exrule" ]; then
-		if [ $enable -ne 1 ]; then
-			return
-		fi
-		__compare_file "$name" "$KP_DIR/data/rules/$file" "$exrule"
-		if [ "$?" == "0" ]; then
-			uci set koolproxy.$1.time="`date +%Y-%m-%d" "%H:%M`"
-			uci commit koolproxy
-			RESTART_KOOLPROXY=true
-		fi
-		cat $KP_DIR/data/rules/$file >>$KP_DIR/data/rules/user.txt
-		echo >>$LOGFILE
-	fi
-}
-
-update_rss_rules() {
-	cp $KP_DIR/data/user.txt $KP_DIR/data/rules/user.txt
-	config_load $CONFIG
-	config_foreach __update_rule rss_rule
-}
-
-
-	
 update_rules() {
-	echo $(date "+%F %T"): ------------------- 内置规则更新 ------------------- >>$LOGFILE
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/kp.dat' -q -O $KP_DIR/data/rules/kp.dat
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/daily.txt' -q -O $KP_DIR/data/rules/daily.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/koolproxy.txt' -q -O $KP_DIR/data/rules/koolproxy.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/yhosts.txt' -q -O $KP_DIR/data/rules/yhosts.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/steven.txt' -q -O $KP_DIR/data/rules/steven.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/adg.txt' -q -O $KP_DIR/data/rules/adg.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/antiad.txt' -q -O $KP_DIR/data/rules/antiad.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/adgk.txt' -q -O $KP_DIR/data/rules/adgk.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/koolproxy_ipset.conf' -q -O $KP_DIR/koolproxy_ipset.conf
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/dnsmasq.adblock' -q -O $KP_DIR/dnsmasq.adblock
-	adg_rules_local=`cat /usr/share/koolproxy/data/rules/adg.txt  | sed -n '4p'|awk '{print $4}'`
-	steven_rules_local=`cat /usr/share/koolproxy/data/rules/steven.txt  | sed -n '2p'|awk '{print $3,$4,$5,$6}'`
-	yhosts_rules_local=`cat /usr/share/koolproxy/data/rules/yhosts.txt  | sed -n '1p' | cut -d ":" -f2`
-	antiad_rules_local=`cat /usr/share/koolproxy/data/rules/antiad.txt  | sed -n '2p' | cut -d "=" -f2`
-	koolproxy_rules_local=`cat /usr/share/koolproxy/data/rules/koolproxy.txt  | sed -n '3p'|awk '{print $3,$4}'`
-	adgk_rules_local=`cat /usr/share/koolproxy/data/rules/adgk.txt  | sed -n '1p'|awk '{print $3}'`
-	echo $(date "+%F %T"): -------------------AdGuard规则 Version $adg_rules_local >>$LOGFILE
-	echo $(date "+%F %T"): -------------------Steven规则 Version $steven_rules_local >>$LOGFILE
-	echo $(date "+%F %T"): -------------------Yhosts规则 Version $yhosts_rules_local >>$LOGFILE
-	echo $(date "+%F %T"): -------------------AntiAD规则 Version $antiad_rules_local >>$LOGFILE
-	echo $(date "+%F %T"): -------------------坂本规则   Version $adgk_rules_local >>$LOGFILE
-	echo $(date "+%F %T"): -------------------静态规则   Version $koolproxy_rules_local >>$LOGFILE
-	echo $(date "+%F %T"): ------------------- 内置规则更新成功！ ------------------- >>$LOGFILE
-	RESTART_KOOLPROXY=true
+	echo $(date "+%F %T"): ------------------- 内置规则更新 >>$LOGFILE
+	url_koolproxy="http://router.houzi-blog.top:3090/koolproxy.txt"
+	url_kpdaily="http://router.houzi-blog.top:3090/daily.txt"
+	url_kpvideo="http://router.houzi-blog.top:3090/kp.dat"
+	url_adguard="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/adg.txt"
+	url_steven="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/steven.txt"
+	url_yhosts="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/yhosts.txt"
+	url_antiad="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/antiad.txt"
+	url_banben="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/adgk.txt"
+	url_kpipset="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/koolproxy_ipset.conf"
+	url_dnsmasq="https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/dnsmasq.adblock"
 
+	echo $(date "+%F %T"): ------------------- 下载已勾选的规则 >>$LOGFILE
+	local rulelist="$(uci -q get koolproxy.@global[0].koolproxy_rules)"
+	for rule in $rulelist
+	do
+		case "$rule" in
+			koolproxy.txt)
+				for i in {1..5}; do
+					wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/koolproxy.txt $url_koolproxy
+					koolproxy_size=`ls -l $TMP_DIR/koolproxy.txt | awk '{print $5}'`
+					if [[ "$koolproxy_size" -gt 0 ]]; then
+						echo $(date "+%F %T"): ------------------- KP静态规则文件下载完成并等待校验 >>$LOGFILE
+						koolproxy_update=1	
+				break
+					else
+						echo $(date "+%F %T"): ------------------- KP静态规则文件下载失败 >>$LOGFILE
+					fi
+				done
+			;;
+			daily.txt)
+				for i in {1..5}; do
+					wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/daily.txt $url_kpdaily
+					kpdaily_size=`ls -l $TMP_DIR/daily.txt | awk '{print $5}'`
+					if [[ "$kpdaily_size" -gt 0 ]]; then
+						echo $(date "+%F %T"): ------------------- KP每日规则文件下载完成并等待校验 >>$LOGFILE
+						kpdaily_update=1		
+				break
+					else
+						echo $(date "+%F %T"): ------------------- KP每日规则文件下载失败 >>$LOGFILE
+					fi
+				done
+			;;
+			kp.dat)
+				for i in {1..5}; do
+					wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/kp.dat $url_kpvideo
+					kpvideo_size=`ls -l $TMP_DIR/kp.dat | awk '{print $5}'`
+					if [[ "$kpvideo_size" -gt 0 ]]; then
+						echo $(date "+%F %T"): ------------------- KP视频规则文件下载完成并等待校验 >>$LOGFILE
+						kpvideo_update=1
+				break
+					else
+						echo $(date "+%F %T"): ------------------- KP视频规则文件下载失败 >>$LOGFILE
+					fi
+				done
+			;;
+		esac
+	done
+
+	local rulelist="$(uci -q get koolproxy.@global[0].thirdparty_rules)"
+	for rule in $rulelist
+	do
+		case "$rule" in
+                        adg.txt)
+				for i in {1..5}; do
+					wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/adg.txt $url_adguard
+					adguard_size=`ls -l $TMP_DIR/adg.txt | awk '{print $5}'`
+					if [[ "$adguard_size" -gt 0 ]]; then
+						echo $(date "+%F %T"): ------------------- adguard规则文件下载完成并等待校验 >>$LOGFILE
+						adguard_update=1
+				break
+					else
+						echo $(date "+%F %T"): ------------------- adguard规则文件下载失败 >>$LOGFILE
+					fi
+				done
+			;;
+			steven.txt)
+				for i in {1..5}; do
+					wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/steven.txt $url_steven
+					steven_size=`ls -l $TMP_DIR/steven.txt | awk '{print $5}'`
+					if [[ "$steven_size" -gt 0 ]]; then
+						echo $(date "+%F %T"): ------------------- steven规则文件下载完成并等待校验 >>$LOGFILE
+						steven_update=1
+				break
+					else
+						echo $(date "+%F %T"): ------------------- steven规则文件下载失败 >>$LOGFILE
+					fi
+				done
+			;;
+			yhosts.txt)
+				for i in {1..5}; do
+					wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/yhosts.txt $url_yhosts
+					yhosts_size=`ls -l $TMP_DIR/yhosts.txt | awk '{print $5}'`
+					if [[ "$yhosts_size" -gt 0 ]]; then
+						echo $(date "+%F %T"): ------------------- yhosts规则文件下载完成并等待校验 >>$LOGFILE
+						yhosts_update=1
+				break
+					else
+						echo $(date "+%F %T"): ------------------- yhosts规则文件下载失败 >>$LOGFILE
+					fi
+				done
+			;;
+			antiad.txt)
+				for i in {1..5}; do
+					wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/antiad.txt $url_antiad
+					antiad_size=`ls -l $TMP_DIR/antiad.txt | awk '{print $5}'`
+					if [[ "$antiad_size" -gt 0 ]]; then
+						echo $(date "+%F %T"): ------------------- antiad规则文件下载完成并等待校验 >>$LOGFILE
+						antiad_update=1
+				break
+					else
+						echo $(date "+%F %T"): ------------------- antiad规则文件下载失败 >>$LOGFILE
+					fi
+				done
+			;;
+		        adgk.txt)
+				for i in {1..5}; do
+					wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/adgk.txt $url_banben
+					banben_size=`ls -l $TMP_DIR/adgk.txt | awk '{print $5}'`
+					if [[ "$banben_size" -gt 0 ]]; then
+						echo $(date "+%F %T"): ------------------- banben规则文件下载完成并等待校验 >>$LOGFILE
+						banben_update=1
+				break
+					else
+						echo $(date "+%F %T"): ------------------- banben规则文件下载失败 >>$LOGFILE
+					fi
+				done
+			;;
+		esac
+	done
+
+	if [ "$koolproxy_mode" == "2" ];then
+		for i in {1..5}; do
+			wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/koolproxy_ipset.conf $url_kpipset
+			kpipset_size=`ls -l $TMP_DIR/koolproxy_ipset.conf | awk '{print $5}'`
+			if [[ "$kpipset_size" -gt 0 ]]; then
+				echo $(date "+%F %T"): ------------------- kp_ipset.conf文件下载完成并等待校验 >>$LOGFILE
+				kpipset_update=1
+		break
+			else
+				echo $(date "+%F %T"): ------------------- kp_ipset.conf文件下载失败 >>$LOGFILE
+			fi
+		done
+	fi
+
+	if [ "$koolproxy_host" != "1" ];then
+		for i in {1..5}; do
+			wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/dnsmasq.adblock $url_dnsmasq
+			dnsmasq_size=`ls -l $TMP_DIR/dnsmasq.adblock | awk '{print $5}'`
+			if [[ "$dnsmasq_size" -gt 0 ]]; then
+				echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件下载完成并等待校验 >>$LOGFILE
+				dnsmasq_update=1
+		break
+			else
+				echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件下载失败 >>$LOGFILE
+			fi
+		done
+	fi
+
+	echo >>$LOGFILE
+	echo $(date "+%F %T"): ------------------- 检查与替换规则 >>$LOGFILE
+if [ "$koolproxy_update" == "1" ]; then
+	koolproxy_rules_local=`cat $TMP_DIR/koolproxy.txt  | sed -n '3p'|awk '{print $3,$4}'`
+	koolproxy_rules_old_local=`cat $KP_DIR/data/rules/koolproxy.txt  | sed -n '3p'|awk '{print $3,$4}'`
+	if [ "$koolproxy_rules_local" != "$koolproxy_rules_old_local" ]; then
+		mv -f $TMP_DIR/koolproxy.txt $KP_DIR/data/rules/koolproxy.txt
+		echo $(date "+%F %T"): ------------------- KP静态规则 更新至  Version $koolproxy_rules_local >>$LOGFILE
+	else
+		echo $(date "+%F %T"): ------------------- 检测到KP静态规则本地版本与在线版本完全相同 >>$LOGFILE
+	fi
+else	
+	echo $(date "+%F %T") -------------------KP静态规则更新失败 >>$LOGFILE
+fi
+
+if [ "$kpdaily_update" == "1" ]; then
+	kpdaily_rule_md5=`md5sum $TMP_DIR/daily.txt  | awk '{print $1}'`
+	kpdaily_rule_old_md5=`md5sum $KP_DIR/data/rules/daily.txt  | awk '{print $1}'`
+	if [ "$kpdaily_rule_md5" != "$kpdaily_rule_old_md5" ]; then
+		mv -f $TMP_DIR/daily.txt $KP_DIR/data/rules/daily.txt
+		echo $(date "+%F %T"): ------------------- KP每日规则  已经更新 >>$LOGFILE
+	else
+		echo $(date "+%F %T"): ------------------- 检测到KP每日规则本地版本与在线版本完全相同 >>$LOGFILE
+	fi
+else
+	echo $(date "+%F %T") -------------------KP每日规则更新失败 >>$LOGFILE
+fi
+
+if [ "$kpvideo_update" == "1" ]; then
+	kp_video_md5=`md5sum $TMP_DIR/kp.dat  | awk '{print $1}'`
+	kp_video_old_md5=`md5sum $KP_DIR/data/rules/kp.dat  | awk '{print $1}'`
+	if [ "$kp_video_md5" != "$kp_video_old_md5" ]; then
+		mv -f $TMP_DIR/kp.dat $KP_DIR/data/rules/kp.dat
+		echo $(date "+%F %T"): ------------------- KP视频规则 已经更新 >>$LOGFILE
+	else
+		echo $(date "+%F %T"): ------------------- 检测到KP视频规则本地版本与在线版本完全相同 >>$LOGFILE
+	fi
+else
+	echo $(date "+%F %T"): ------------------- KP视频规则更新失败 >>$LOGFILE
+fi
+
+if [ "$adguard_update" == "1" ]; then
+	adguard_rules_local=`cat $TMP_DIR/adg.txt  | sed -n '4p'|awk '{print $4}'`
+	adguard_rules_old_local=`cat $KP_DIR/data/rules/adg.txt  | sed -n '4p'|awk '{print $4}'`
+	if [ "$adguard_rules_local" != "$adguard_rules_old_local" ]; then
+		mv -f $TMP_DIR/adg.txt $KP_DIR/data/rules/adg.txt
+		echo $(date "+%F %T"): ------------------- AdGuard规则 更新至Version $adguard_rules_local >>$LOGFILE
+	else
+		echo $(date "+%F %T"): ------------------- 检测到AdGuard规则本地版本与在线版本完全相同 >>$LOGFILE
+	fi
+else
+	echo $(date "+%F %T"): ------------------- AdGuard规则文件
+fi
+
+if [ "$steven_update" == "1" ]; then
+	steven_rules_local=`cat $TMP_DIR/steven.txt  | sed -n '2p'|awk '{print $3,$4,$5,$6}'`
+	steven_rules_old_local=`cat $KP_DIR/data/rules/steven.txt  | sed -n '2p'|awk '{print $3,$4,$5,$6}'`
+	if [ "$steven_rules_local" != "$steven_rules_old_local" ]; then
+		mv -f $TMP_DIR/steven.txt $KP_DIR/data/rules/steven.txt
+		echo $(date "+%F %T"): ------------------- Steven规则 更新至Version $steven_rules_local >>$LOGFILE
+	else
+		echo $(date "+%F %T"): ------------------- 检测到Steven规则本地版本与在线版本完全相同 >>$LOGFILE
+	fi
+else
+	echo $(date "+%F %T"): ------------------- Steven规则更新失败 >>$LOGFILE
+fi
+
+if [ "$yhosts_update" == "1" ]; then
+	yhosts_rules_local=`cat $TMP_DIR/yhosts.txt  | sed -n '1p' | cut -d ":" -f2`
+	yhosts_rules_old_local=`cat $KP_DIR/data/rules/yhosts.txt  | sed -n '1p' | cut -d ":" -f2`
+	if [ "$yhosts_rules_local" != "$yhosts_rules_old_local" ]; then
+		mv -f $TMP_DIR/yhosts.txt $KP_DIR/data/rules/yhosts.txt
+		echo $(date "+%F %T"): ------------------- Yhosts规则 更新至Version $yhosts_rules_local >>$LOGFILE
+	else
+		echo $(date "+%F %T"): ------------------- 检测Yhosts规则到本地版本与在线版本完全相同 >>$LOGFILE
+	fi
+else
+	echo $(date "+%F %T"): ------------------- Yhosts规则更新失败 >>$LOGFILE
+fi
+
+if [ "$antiad_update" == "1" ]; then
+	antiad_rules_local=`cat $TMP_DIR/antiad.txt  | sed -n '2p' | cut -d "=" -f2`
+	antiad_rules_old_local=`cat $KP_DIR/data/rules/antiad.txt  | sed -n '2p' | cut -d "=" -f2`
+	if [ "$antiad_rules_local" != "$antiad_rules_old_local" ]; then
+		mv -f $TMP_DIR/antiad.txt $KP_DIR/data/rules/antiad.txt
+		echo $(date "+%F %T"): ------------------- AntiAD规则 更新至Version $antiad_rules_local >>$LOGFILE
+	else
+		echo $(date "+%F %T"): ------------------- 检测到AntiAD规则本地版本与在线版本完全相同 >>$LOGFILE
+	fi
+else
+	echo $(date "+%F %T"): ------------------- AntiAD规则更新失败 >>$LOGFILE
+fi
+
+if [ "$banben_update" == "1" ]; then
+	banben_rules_local=`cat $TMP_DIR/adgk.txt  | sed -n '1p'|awk '{print $3}'`
+	banben_rules_old_local=`cat $KP_DIR/data/rules/adgk.txt  | sed -n '1p'|awk '{print $3}'`
+	if [ "$banben_rules_local" != "$banben_rules_old_local" ]; then
+		mv -f $TMP_DIR/adgk.txt $KP_DIR/data/rules/adgk.txt
+		echo $(date "+%F %T"): ------------------- Banben规则 更新至Version $banben_rules_local >>$LOGFILE
+	else
+		echo $(date "+%F %T"): ------------------- 检测到Banben规则本地版本与在线版本完全相同 >>$LOGFILE
+	fi
+else
+	echo $(date "+%F %T"): ------------------- Banben规则更新失败 >>$LOGFILE
+fi
+
+if [ "$kpipset_update" == "1" ]; then
+	kpipset_md5=`md5sum $TMP_DIR/koolproxy_ipset.conf  | awk '{print $1}'`
+	kpipset_old_md5=`md5sum $KP_DIR/koolproxy_ipset.conf  | awk '{print $1}'`
+	if [ "$kpipset_md5" != "$kpipset_old_md5" ]; then
+		mv -f $TMP_DIR/ $KP_DIR/koolproxy_ipset.conf
+		echo $(date "+%F %T"): ------------------- kp_ipset.conf文件已更新 >>$LOGFILE
+	else
+		echo $(date "+%F %T"): ------------------- 检测到koolproxy_ipset.conf本地文件与在线文件完全相同 >>$LOGFILE
+	fi
+else
+	echo $(date "+%F %T"): ------------------- kp_ipset.conf文件更新失败 >>$LOGFILE
+fi
+
+if [ "$dnsmasq_update" == "1" ]; then
+	dnsmasq_md5=`md5sum $TMP_DIR/dnsmasq.adblock  | awk '{print $1}'`
+	dnsmasq_old_md5=`md5sum $KP_DIR/dnsmasq.adblock  | awk '{print $1}'`
+	if [ "$dnsmasq_md5" != "$dnsmasq_old_md5" ]; then
+		mv -f $TMP_DIR/dnsmasq.adblock $KP_DIR/dnsmasq.adblock
+		echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件已更新 >>$LOGFILE
+	else
+		echo $(date "+%F %T"): ------------------- 检测到dnsmasq.adblock本地文件与在线文件完全相同 >>$LOGFILE
+	fi
+else
+	echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件更新失败 >>$LOGFILE
+fi
+
+	echo $(date "+%F %T"): ------------------- 内置规则更新完成 >>$LOGFILE
+	RESTART_KOOLPROXY=true
 }
 
 update_adb_host() {
-	/usr/sbin/adblockplus >>$LOGFILE 2>&1 &
-	if [ "$?" == "0" ]; then
+	echo $(date "+%F %T"): ------------------- 正在下载并转换Adblock Plus Hosts规则 >>$LOGFILE
+	$KP_DIR/adblockplus
+	echo $(date "+%F %T"): ------------------- Adblock Plus Hosts规则更新完成 >>$LOGFILE
+	if [ "$?" != "0" ]; then
 		RESTART_DNSMASQ=true
 	fi
 }
@@ -152,12 +350,6 @@ limit_log $LOGFILE
 # update rules
 update_rules
 
-# update user rules
-update_rss_rules
-
-koolproxy_mode=$(config_t_get global koolproxy_mode 1)
-koolproxy_host=$(config_t_get global koolproxy_host 0)
-
 # update ADB Plus Host
 if [ "$koolproxy_mode" == "2" ] && [ "$koolproxy_host" == "1" ];then
 	update_adb_host
@@ -165,7 +357,8 @@ fi
 
 if [ $RESTART_KOOLPROXY ]; then
 	restart_koolproxy
-	echo $(date "+%F %T"): 重启koolproxy进程 >>$LOGFILE
+	echo >>$LOGFILE
+	echo $(date "+%F %T"): -------------------  重启koolproxy进程 >>$LOGFILE
 fi
 
-init_env
+rm -rf "$TMP_DIR"
