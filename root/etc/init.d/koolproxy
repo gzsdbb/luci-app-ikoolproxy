@@ -29,9 +29,9 @@ config_t_get() {
 }
 
 add_ipset_conf() {
-	if [ -s /etc/adblocklist/adbypass ]; then
+	if [ -s $KP_DIR/data/adblocklist/adbypass ]; then
 		echo_date 添加白名单软连接...
-		cat /etc/adblocklist/adbypass | sed "s/,/\n/g" | sed "s/^/ipset=&\/./g" | sed "s/$/\/white_kp_list/g"  >> /tmp/adbypass.conf
+		cat $KP_DIR/data/adblocklist/adbypass | sed "s/,/\n/g" | sed "s/^/ipset=&\/./g" | sed "s/$/\/white_kp_list/g"  >> /tmp/adbypass.conf
 		rm -rf /tmp/dnsmasq.d/adbypass.conf
 		ln -sf /tmp/adbypass.conf /tmp/dnsmasq.d/adbypass.conf
 
@@ -49,8 +49,8 @@ add_ipset_conf() {
 		ln -sf $KP_DIR/koolproxy_ipset.conf /tmp/dnsmasq.d/koolproxy_ipset.conf
 
 		echo_date 添加自定义黑名单软连接...
-		if [ -s /etc/adblocklist/adblock ]; then
-			cat /etc/adblocklist/adblock | sed "s/,/\n/g" | sed "s/^/ipset=&\/./g" | sed "s/$/\/black_koolproxy/g"  >> /tmp/adblock.conf
+		if [ -s $KP_DIR/data/adblocklist/adblock ]; then
+			cat $KP_DIR/data/adblocklist/adblock | sed "s/,/\n/g" | sed "s/^/ipset=&\/./g" | sed "s/$/\/black_koolproxy/g"  >> /tmp/adblock.conf
 			rm -rf /tmp/dnsmasq.d/adblock.conf
 			ln -sf /tmp/adblock.conf /tmp/dnsmasq.d/adblock.conf
 		fi
@@ -111,9 +111,9 @@ add_white_black_ip() {
 		ipset -A white_kp_list $ip >/dev/null 2>&1
 
 	done
-	sed -e "s/^/add white_kp_list &/g" /etc/adblocklist/adbypassip | awk '{print $0} END{print "COMMIT"}' | ipset -R 2>/dev/null
+	sed -e "s/^/add white_kp_list &/g" $KP_DIR/data/adblocklist/adbypassip | awk '{print $0} END{print "COMMIT"}' | ipset -R 2>/dev/null
 	ipset -A black_koolproxy 110.110.110.110 >/dev/null 2>&1
-	sed -e "s/^/add black_koolproxy &/g" /etc/adblocklist/adblockip | awk '{print $0} END{print "COMMIT"}' | ipset -R 2>/dev/null
+	sed -e "s/^/add black_koolproxy &/g" $KP_DIR/data/adblocklist/adblockip | awk '{print $0} END{print "COMMIT"}' | ipset -R 2>/dev/null
 }
 
 load_config() {
@@ -163,6 +163,7 @@ __load_exrule() {
 	config_get file $1 file
 	config_get exrule $1 url
 	config_get enable $1 load
+	file=subscribe.txt
 	if [ -n "$exrule" ]; then
 		if [ $enable -ne 1 ]; then
 			[ -n "$file" ] && [ -f $KP_DIR/data/rules/$file ] && rm -f $KP_DIR/data/rules/$file
@@ -178,7 +179,7 @@ __load_exrule() {
 		fi
 
 		if [ ! -f $KP_DIR/data/rules/$file ]; then
-			wget $exrule -q -O $TMP_DIR/$file
+			wget --no-check-certificate -4 -c -T 8 -t 10 -O $TMP_DIR/$file $exrule
 			if [ "$?" == "0" ]; then
 				uci set koolproxy.$1.time="`date +%Y-%m-%d" "%H:%M`"
 				uci commit koolproxy
@@ -188,6 +189,7 @@ __load_exrule() {
 				[ -f $TMP_DIR/$file ] && rm -f $TMP_DIR/$file
 			fi
 		fi
+		
 		cat $KP_DIR/data/rules/$file >>$KP_DIR/data/rules/user.txt
 	fi
 }
@@ -433,8 +435,8 @@ start_service() {
 
 	procd_set_param respawn
 
-	procd_set_param file /etc/adblocklist/adblock
-	procd_set_param file /etc/adblocklist/adblockip
+	procd_set_param file $KP_DIR/data/adblocklist/adblock
+	procd_set_param file $KP_DIR/data/adblocklist/adblockip
 	procd_set_param file /usr/share/koolproxy/data/user.txt
 	procd_set_param stdout 1
 	procd_set_param stderr 1
