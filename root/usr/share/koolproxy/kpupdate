@@ -95,6 +95,21 @@ update_rules() {
 					fi
 				done
 			;;
+			dnsmasq.adblock)
+				if [ "$koolproxy_host" != "1" ];then
+					for i in {1..5}; do
+						wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/dnsmasq.adblock $url_dnsmasq
+						dnsmasq_size=`ls -l $TMP_DIR/dnsmasq.adblock | awk '{print $5}'`
+						if [[ "$dnsmasq_size" -gt 0 ]]; then
+							echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件下载完成并等待校验 >>$LOGFILE
+				dnsmasq_update=1
+					break
+						else
+							echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件下载失败 >>$LOGFILE
+						fi
+					done
+				fi
+			;;
 		esac
 	done
 
@@ -180,20 +195,6 @@ update_rules() {
 		break
 			else
 				echo $(date "+%F %T"): ------------------- kp_ipset.conf文件下载失败 >>$LOGFILE
-			fi
-		done
-	fi
-
-	if [ "$koolproxy_host" != "1" ];then
-		for i in {1..5}; do
-			wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/dnsmasq.adblock $url_dnsmasq
-			dnsmasq_size=`ls -l $TMP_DIR/dnsmasq.adblock | awk '{print $5}'`
-			if [[ "$dnsmasq_size" -gt 0 ]]; then
-				echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件下载完成并等待校验 >>$LOGFILE
-				dnsmasq_update=1
-		break
-			else
-				echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件下载失败 >>$LOGFILE
 			fi
 		done
 	fi
