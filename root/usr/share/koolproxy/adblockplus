@@ -1,0 +1,28 @@
+#!/bin/sh
+TMP_DIR=/tmp/koolproxy
+echo "$(date "+%F %T"): 正在下载adblockplus规则..."
+wget --no-check-certificate -4 -c -T 8 -t 10 https://easylist-downloads.adblockplus.org/easylistchina+easylist.txt -O $TMP_DIR/adlist.txt
+if [ "$?" == "0" ]; then
+	grep ^\|\|[^\*]*\^$ $TMP_DIR/adlist.txt | sed -e 's:||:address\=\/:' -e 's:\^:/0\.0\.0\.0:' > $TMP_DIR/dnsmasq.adblock
+	rm -f $TMP_DIR/adlist.txt
+	dnsmasq_size=`ls -l $TMP_DIR/dnsmasq.adblock | awk '{print $5}'`
+	dnsmasq_old_size=`ls -l /usr/share/koolproxy/dnsmasq.adblock | awk '{print $5}'`
+	if [ "$dnsmasq_size" == "$dnsmasq_old_size" ]; then
+		echo "$(date "+%F %T"): adblockplus本地规则和服务器规则相同，无需更新!" && rm -f $TMP_DIR/dnsmasq.adblock && return 1
+	else
+	echo "$(date "+%F %T"): 检测到adblockplus规则有更新，开始转换规则！"
+	sed -i '/youku/d' $TMP_DIR/dnsmasq.adblock >/dev/null 2>&1
+	sed -i '/[1-9]\{1,3\}\.[1-9]\{1,3\}\.[1-9]\{1,3\}\.[1-9]\{1,3\}/d' $TMP_DIR/dnsmasq.adblock >/dev/null 2>&1
+	mv $TMP_DIR/dnsmasq.adblock /usr/share/koolproxy/dnsmasq.adblock
+	echo "$(date "+%F %T"): adblockplus规则转换完成，应用新规则。"
+	echo ""
+	echo "$(date "+%F %T"): 重启dnsmasq进程"
+	/etc/init.d/dnsmasq restart > /dev/null 2>&1
+
+	return 0
+	fi
+else
+	echo "$(date "+%F %T"): 获取在线版本时出现错误! "
+	[ -f $TMP_DIR/adlist.txt ] && rm -f $TMP_DIR/adlist.txt
+	return 1
+fi
