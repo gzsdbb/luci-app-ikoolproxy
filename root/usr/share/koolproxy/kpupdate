@@ -203,131 +203,121 @@ update_rules() {
 if [ "$koolproxy_update" == "1" ]; then
 	koolproxy_rules_local=`cat $TMP_DIR/koolproxy.txt  | sed -n '3p'|awk '{print $3,$4}'`
 	koolproxy_rules_old_local=`cat $KP_DIR/data/rules/koolproxy.txt  | sed -n '3p'|awk '{print $3,$4}'`
-	if [ "$koolproxy_rules_local" != "$koolproxy_rules_old_local" ]; then
+	cmp -s $TMP_DIR/koolproxy.txt $KP_DIR/data/rules/koolproxy.txt
+	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/koolproxy.txt $KP_DIR/data/rules/koolproxy.txt
-		echo $(date "+%F %T"): ------------------- KP静态规则 更新至  Version $koolproxy_rules_local >>$LOGFILE
+		echo $(date "+%F %T"): ------------------- KP静态规则从$koolproxy_rules_old_local更新至$koolproxy_rules_local >>$LOGFILE
 	else
 		echo $(date "+%F %T"): ------------------- 检测到KP静态规则本地版本与在线版本完全相同 >>$LOGFILE
 	fi
-else	
-	echo $(date "+%F %T") -------------------KP静态规则更新失败 >>$LOGFILE
 fi
 
 if [ "$kpdaily_update" == "1" ]; then
 	kpdaily_rule_md5=`md5sum $TMP_DIR/daily.txt  | awk '{print $1}'`
 	kpdaily_rule_old_md5=`md5sum $KP_DIR/data/rules/daily.txt  | awk '{print $1}'`
-	if [ "$kpdaily_rule_md5" != "$kpdaily_rule_old_md5" ]; then
+	cmp -s $TMP_DIR/daily.txt $KP_DIR/data/rules/daily.txt
+	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/daily.txt $KP_DIR/data/rules/daily.txt
-		echo $(date "+%F %T"): ------------------- KP每日规则  已经更新 >>$LOGFILE
+		echo $(date "+%F %T"): ------------------- KP每日规则从$kpdaily_rule_old_md5更新至$kpdaily_rule_md5 >>$LOGFILE
 	else
 		echo $(date "+%F %T"): ------------------- 检测到KP每日规则本地版本与在线版本完全相同 >>$LOGFILE
 	fi
-else
-	echo $(date "+%F %T") -------------------KP每日规则更新失败 >>$LOGFILE
 fi
 
 if [ "$kpvideo_update" == "1" ]; then
 	kp_video_md5=`md5sum $TMP_DIR/kp.dat  | awk '{print $1}'`
 	kp_video_old_md5=`md5sum $KP_DIR/data/rules/kp.dat  | awk '{print $1}'`
-	if [ "$kp_video_md5" != "$kp_video_old_md5" ]; then
+	cmp -s $TMP_DIR/kp.dat $KP_DIR/data/rules/kp.dat
+	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/kp.dat $KP_DIR/data/rules/kp.dat
-		echo $(date "+%F %T"): ------------------- KP视频规则 已经更新 >>$LOGFILE
+		echo $(date "+%F %T"): ------------------- KP视频规则从$kp_video_old_md5更新至$kp_video_md5 >>$LOGFILE
 	else
 		echo $(date "+%F %T"): ------------------- 检测到KP视频规则本地版本与在线版本完全相同 >>$LOGFILE
 	fi
-else
-	echo $(date "+%F %T"): ------------------- KP视频规则更新失败 >>$LOGFILE
 fi
 
 if [ "$adguard_update" == "1" ]; then
 	adguard_rules_local=`cat $TMP_DIR/adg.txt  | sed -n '4p'|awk '{print $4}'`
 	adguard_rules_old_local=`cat $KP_DIR/data/rules/adg.txt  | sed -n '4p'|awk '{print $4}'`
-	if [ "$adguard_rules_local" != "$adguard_rules_old_local" ]; then
+	cmp -s $TMP_DIR/adg.txt $KP_DIR/data/rules/adg.txt
+	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/adg.txt $KP_DIR/data/rules/adg.txt
-		echo $(date "+%F %T"): ------------------- AdGuard规则 更新至Version $adguard_rules_local >>$LOGFILE
+		echo $(date "+%F %T"): ------------------- AdGuard规则从$adguard_rules_old_local更新至$adguard_rules_local >>$LOGFILE
 	else
 		echo $(date "+%F %T"): ------------------- 检测到AdGuard规则本地版本与在线版本完全相同 >>$LOGFILE
 	fi
-else
-	echo $(date "+%F %T"): ------------------- AdGuard规则文件
 fi
 
 if [ "$steven_update" == "1" ]; then
 	steven_rules_local=`cat $TMP_DIR/steven.txt  | sed -n '2p'|awk '{print $3,$4,$5,$6}'`
 	steven_rules_old_local=`cat $KP_DIR/data/rules/steven.txt  | sed -n '2p'|awk '{print $3,$4,$5,$6}'`
-	if [ "$steven_rules_local" != "$steven_rules_old_local" ]; then
+	cmp -s $TMP_DIR/steven.txt $KP_DIR/data/rules/steven.txt
+	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/steven.txt $KP_DIR/data/rules/steven.txt
-		echo $(date "+%F %T"): ------------------- Steven规则 更新至Version $steven_rules_local >>$LOGFILE
+		echo $(date "+%F %T"): ------------------- Steven规则从$steven_rules_old_local更新至$steven_rules_local >>$LOGFILE
 	else
 		echo $(date "+%F %T"): ------------------- 检测到Steven规则本地版本与在线版本完全相同 >>$LOGFILE
 	fi
-else
-	echo $(date "+%F %T"): ------------------- Steven规则更新失败 >>$LOGFILE
 fi
 
 if [ "$yhosts_update" == "1" ]; then
 	yhosts_rules_local=`cat $TMP_DIR/yhosts.txt  | sed -n '1p' | cut -d ":" -f2`
 	yhosts_rules_old_local=`cat $KP_DIR/data/rules/yhosts.txt  | sed -n '1p' | cut -d ":" -f2`
-	if [ "$yhosts_rules_local" != "$yhosts_rules_old_local" ]; then
+	cmp -s $TMP_DIR/yhosts.txt $KP_DIR/data/rules/yhosts.txt
+	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/yhosts.txt $KP_DIR/data/rules/yhosts.txt
-		echo $(date "+%F %T"): ------------------- Yhosts规则 更新至Version $yhosts_rules_local >>$LOGFILE
+		echo $(date "+%F %T"): ------------------- Yhosts规则从$yhosts_rules_old_local更新至$yhosts_rules_local >>$LOGFILE
 	else
 		echo $(date "+%F %T"): ------------------- 检测Yhosts规则到本地版本与在线版本完全相同 >>$LOGFILE
 	fi
-else
-	echo $(date "+%F %T"): ------------------- Yhosts规则更新失败 >>$LOGFILE
 fi
 
 if [ "$antiad_update" == "1" ]; then
 	antiad_rules_local=`cat $TMP_DIR/antiad.txt  | sed -n '2p' | cut -d "=" -f2`
 	antiad_rules_old_local=`cat $KP_DIR/data/rules/antiad.txt  | sed -n '2p' | cut -d "=" -f2`
-	if [ "$antiad_rules_local" != "$antiad_rules_old_local" ]; then
+	cmp -s $TMP_DIR/antiad.txt $KP_DIR/data/rules/antiad.txt
+	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/antiad.txt $KP_DIR/data/rules/antiad.txt
-		echo $(date "+%F %T"): ------------------- AntiAD规则 更新至Version $antiad_rules_local >>$LOGFILE
+		echo $(date "+%F %T"): ------------------- AntiAD规则从$antiad_rules_old_local更新至$antiad_rules_local >>$LOGFILE
 	else
 		echo $(date "+%F %T"): ------------------- 检测到AntiAD规则本地版本与在线版本完全相同 >>$LOGFILE
 	fi
-else
-	echo $(date "+%F %T"): ------------------- AntiAD规则更新失败 >>$LOGFILE
 fi
 
 if [ "$banben_update" == "1" ]; then
 	banben_rules_local=`cat $TMP_DIR/adgk.txt  | sed -n '1p'|awk '{print $3}'`
 	banben_rules_old_local=`cat $KP_DIR/data/rules/adgk.txt  | sed -n '1p'|awk '{print $3}'`
-	if [ "$banben_rules_local" != "$banben_rules_old_local" ]; then
+	cmp -s $TMP_DIR/adgk.txt $KP_DIR/data/rules/adgk.txt
+	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/adgk.txt $KP_DIR/data/rules/adgk.txt
-		echo $(date "+%F %T"): ------------------- Banben规则 更新至Version $banben_rules_local >>$LOGFILE
+		echo $(date "+%F %T"): ------------------- Banben规则从$banben_rules_old_local更新至$banben_rules_local >>$LOGFILE
 	else
 		echo $(date "+%F %T"): ------------------- 检测到Banben规则本地版本与在线版本完全相同 >>$LOGFILE
 	fi
-else
-	echo $(date "+%F %T"): ------------------- Banben规则更新失败 >>$LOGFILE
 fi
 
 if [ "$kpipset_update" == "1" ]; then
 	kpipset_md5=`md5sum $TMP_DIR/koolproxy_ipset.conf  | awk '{print $1}'`
 	kpipset_old_md5=`md5sum $KP_DIR/koolproxy_ipset.conf  | awk '{print $1}'`
-	if [ "$kpipset_md5" != "$kpipset_old_md5" ]; then
-		mv -f $TMP_DIR/ $KP_DIR/koolproxy_ipset.conf
-		echo $(date "+%F %T"): ------------------- kp_ipset.conf文件已更新 >>$LOGFILE
+	cmp -s $TMP_DIR/koolproxy_ipset.conf $KP_DIR/koolproxy_ipset.conf
+	if [ "$?" == "1" ]; then
+		mv -f $TMP_DIR/koolproxy_ipset.conf $KP_DIR/koolproxy_ipset.conf
+		echo $(date "+%F %T"): ------------------- koolproxy_ipset.conf文件从$kpipset_old_md5更新至$kpipset_md5 >>$LOGFILE
 	else
 		echo $(date "+%F %T"): ------------------- 检测到koolproxy_ipset.conf本地文件与在线文件完全相同 >>$LOGFILE
 	fi
-else
-	echo $(date "+%F %T"): ------------------- kp_ipset.conf文件更新失败 >>$LOGFILE
 fi
 
 if [ "$dnsmasq_update" == "1" ]; then
 	dnsmasq_md5=`md5sum $TMP_DIR/dnsmasq.adblock  | awk '{print $1}'`
 	dnsmasq_old_md5=`md5sum $KP_DIR/dnsmasq.adblock  | awk '{print $1}'`
-	if [ "$dnsmasq_md5" != "$dnsmasq_old_md5" ]; then
+	cmp -s $TMP_DIR/dnsmasq.adblock $KP_DIR/dnsmasq.adblock
+	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/dnsmasq.adblock $KP_DIR/dnsmasq.adblock
-		echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件已更新 >>$LOGFILE
+		echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件从$dnsmasq_old_md5更新至$dnsmasq_md5 >>$LOGFILE
 	else
 		echo $(date "+%F %T"): ------------------- 检测到dnsmasq.adblock本地文件与在线文件完全相同 >>$LOGFILE
 	fi
-else
-	echo $(date "+%F %T"): ------------------- dnsmasq.adblock文件更新失败 >>$LOGFILE
 fi
 
 	echo $(date "+%F %T"): ------------------- 内置规则更新完成 >>$LOGFILE
