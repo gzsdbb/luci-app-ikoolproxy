@@ -49,6 +49,7 @@ e:value("koolproxy.txt", translate("静态规则"))
 e:value("daily.txt", translate("每日规则"))
 e:value("kp.dat", translate("视频规则"))
 e:value("user.txt", translate("自定义规则"))
+e:value("dnsmasq.adblock", translate("dnsmasq.adblock文件"))
 e.optional = false
 
 e = t:option(MultiValue, "thirdparty_rules", translate("第三方规则"))
