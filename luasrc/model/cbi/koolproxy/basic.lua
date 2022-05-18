@@ -3,7 +3,7 @@ local o,t,e
 local aa1 = luci.sys.exec("head -3 /usr/share/koolproxy/data/rules/koolproxy.txt | grep rules | awk -F' ' '{print $3,$4}'")
 local ab1 = luci.sys.exec("head -4 /usr/share/koolproxy/data/rules/koolproxy.txt | grep video | awk -F' ' '{print $3,$4}'")
 local b1 = luci.sys.exec("head -6 /usr/share/koolproxy/data/rules/adg.txt | grep modified | awk -F' ' '{print$4}'")
-local c1 = luci.sys.exec("head -2 /usr/share/koolproxy/data/rules/steven.txt | grep Date | awk -F' ' '{print$5,$6}'")
+local c1 = luci.sys.exec("head -2 /usr/share/koolproxy/data/rules/steven.txt | grep Date | awk -F' ' '{print$5,$4,$6}'")
 local d1 = luci.sys.exec("head -1 /usr/share/koolproxy/data/rules/yhosts.txt | grep version | awk -F' ' '{print$2}'")
 local e1 = luci.sys.exec("head -2 /usr/share/koolproxy/data/rules/antiad.txt | grep VER | awk -F'=' '{print$2}'")
 local f1 = luci.sys.exec("head -1 /usr/share/koolproxy/data/rules/adgk.txt | grep Version | awk -F' ' '{print$3}'")
