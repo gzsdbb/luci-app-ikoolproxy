@@ -7,8 +7,6 @@ CONFIG=koolproxy
 KP_DIR=/usr/share/koolproxy
 TMP_DIR=/tmp/koolproxy
 LOGFILE="/var/log/koolproxy.log"
-koolproxy_mode=$(config_t_get global koolproxy_mode 1)
-koolproxy_host=$(config_t_get global koolproxy_host 0)
 
 config_t_get() {
 	local index=0
@@ -190,11 +188,11 @@ update_rules() {
 			wget --no-check-certificate -4 -c -T 8 -t 10 -a $TMP_DIR/Download.log -O $TMP_DIR/koolproxy_ipset.conf $url_kpipset
 			kpipset_size=`ls -l $TMP_DIR/koolproxy_ipset.conf | awk '{print $5}'`
 			if [[ "$kpipset_size" -gt 0 ]]; then
-				echo $(date "+%F %T"): ------------------- kp_ipset.conf文件下载完成并等待校验 >>$LOGFILE
+				echo $(date "+%F %T"): ------------------- koolproxy_ipset.conf文件下载完成并等待校验 >>$LOGFILE
 				kpipset_update=1
 		break
 			else
-				echo $(date "+%F %T"): ------------------- kp_ipset.conf文件下载失败 >>$LOGFILE
+				echo $(date "+%F %T"): ------------------- koolproxy_ipset.conf文件下载失败 >>$LOGFILE
 			fi
 		done
 	fi
@@ -335,6 +333,8 @@ update_adb_host() {
 }
 
 # main process
+koolproxy_mode=$(config_t_get global koolproxy_mode 1)
+koolproxy_host=$(config_t_get global koolproxy_host 0)
 init_env
 limit_log $LOGFILE
 
