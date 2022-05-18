@@ -202,6 +202,7 @@ update_rules() {
 if [ "$koolproxy_update" == "1" ]; then
 	koolproxy_rules_local=`cat $TMP_DIR/koolproxy.txt  | sed -n '3p'|awk '{print $3,$4}'`
 	koolproxy_rules_old_local=`cat $KP_DIR/data/rules/koolproxy.txt  | sed -n '3p'|awk '{print $3,$4}'`
+	touch $KP_DIR/data/rules/koolproxy.txt
 	cmp -s $TMP_DIR/koolproxy.txt $KP_DIR/data/rules/koolproxy.txt
 	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/koolproxy.txt $KP_DIR/data/rules/koolproxy.txt
@@ -214,6 +215,7 @@ fi
 if [ "$kpdaily_update" == "1" ]; then
 	kpdaily_rule_md5=`md5sum $TMP_DIR/daily.txt  | awk '{print $1}'`
 	kpdaily_rule_old_md5=`md5sum $KP_DIR/data/rules/daily.txt  | awk '{print $1}'`
+	touch $KP_DIR/data/rules/daily.txt
 	cmp -s $TMP_DIR/daily.txt $KP_DIR/data/rules/daily.txt
 	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/daily.txt $KP_DIR/data/rules/daily.txt
@@ -226,6 +228,7 @@ fi
 if [ "$kpvideo_update" == "1" ]; then
 	kp_video_md5=`md5sum $TMP_DIR/kp.dat  | awk '{print $1}'`
 	kp_video_old_md5=`md5sum $KP_DIR/data/rules/kp.dat  | awk '{print $1}'`
+	touch $KP_DIR/data/rules/kp.dat
 	cmp -s $TMP_DIR/kp.dat $KP_DIR/data/rules/kp.dat
 	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/kp.dat $KP_DIR/data/rules/kp.dat
@@ -238,6 +241,7 @@ fi
 if [ "$adguard_update" == "1" ]; then
 	adguard_rules_local=`cat $TMP_DIR/adg.txt  | sed -n '4p'|awk '{print $4}'`
 	adguard_rules_old_local=`cat $KP_DIR/data/rules/adg.txt  | sed -n '4p'|awk '{print $4}'`
+	touch $KP_DIR/data/rules/adg.txt
 	cmp -s $TMP_DIR/adg.txt $KP_DIR/data/rules/adg.txt
 	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/adg.txt $KP_DIR/data/rules/adg.txt
@@ -250,6 +254,7 @@ fi
 if [ "$steven_update" == "1" ]; then
 	steven_rules_local=`cat $TMP_DIR/steven.txt  | sed -n '2p'|awk '{print $3,$4,$5,$6}'`
 	steven_rules_old_local=`cat $KP_DIR/data/rules/steven.txt  | sed -n '2p'|awk '{print $3,$4,$5,$6}'`
+	touch $KP_DIR/data/rules/steven.txt
 	cmp -s $TMP_DIR/steven.txt $KP_DIR/data/rules/steven.txt
 	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/steven.txt $KP_DIR/data/rules/steven.txt
@@ -262,6 +267,7 @@ fi
 if [ "$yhosts_update" == "1" ]; then
 	yhosts_rules_local=`cat $TMP_DIR/yhosts.txt  | sed -n '1p' | cut -d ":" -f2`
 	yhosts_rules_old_local=`cat $KP_DIR/data/rules/yhosts.txt  | sed -n '1p' | cut -d ":" -f2`
+	touch $KP_DIR/data/rules/yhosts.txt
 	cmp -s $TMP_DIR/yhosts.txt $KP_DIR/data/rules/yhosts.txt
 	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/yhosts.txt $KP_DIR/data/rules/yhosts.txt
@@ -274,6 +280,7 @@ fi
 if [ "$antiad_update" == "1" ]; then
 	antiad_rules_local=`cat $TMP_DIR/antiad.txt  | sed -n '2p' | cut -d "=" -f2`
 	antiad_rules_old_local=`cat $KP_DIR/data/rules/antiad.txt  | sed -n '2p' | cut -d "=" -f2`
+	touch $KP_DIR/data/rules/antiad.txt
 	cmp -s $TMP_DIR/antiad.txt $KP_DIR/data/rules/antiad.txt
 	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/antiad.txt $KP_DIR/data/rules/antiad.txt
@@ -286,6 +293,7 @@ fi
 if [ "$banben_update" == "1" ]; then
 	banben_rules_local=`cat $TMP_DIR/adgk.txt  | sed -n '1p'|awk '{print $3}'`
 	banben_rules_old_local=`cat $KP_DIR/data/rules/adgk.txt  | sed -n '1p'|awk '{print $3}'`
+	touch $KP_DIR/data/rules/adgk.txt
 	cmp -s $TMP_DIR/adgk.txt $KP_DIR/data/rules/adgk.txt
 	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/adgk.txt $KP_DIR/data/rules/adgk.txt
@@ -298,6 +306,7 @@ fi
 if [ "$kpipset_update" == "1" ]; then
 	kpipset_md5=`md5sum $TMP_DIR/koolproxy_ipset.conf  | awk '{print $1}'`
 	kpipset_old_md5=`md5sum $KP_DIR/koolproxy_ipset.conf  | awk '{print $1}'`
+	touch $KP_DIR/koolproxy_ipset.conf
 	cmp -s $TMP_DIR/koolproxy_ipset.conf $KP_DIR/koolproxy_ipset.conf
 	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/koolproxy_ipset.conf $KP_DIR/koolproxy_ipset.conf
@@ -310,6 +319,7 @@ fi
 if [ "$dnsmasq_update" == "1" ]; then
 	dnsmasq_md5=`md5sum $TMP_DIR/dnsmasq.adblock  | awk '{print $1}'`
 	dnsmasq_old_md5=`md5sum $KP_DIR/dnsmasq.adblock  | awk '{print $1}'`
+	touch $KP_DIR/dnsmasq.adblock
 	cmp -s $TMP_DIR/dnsmasq.adblock $KP_DIR/dnsmasq.adblock
 	if [ "$?" == "1" ]; then
 		mv -f $TMP_DIR/dnsmasq.adblock $KP_DIR/dnsmasq.adblock
@@ -353,3 +363,4 @@ if [ $RESTART_KOOLPROXY ]; then
 fi
 
 rm -rf "$TMP_DIR"
+
