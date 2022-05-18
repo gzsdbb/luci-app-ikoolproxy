@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ikoolproxy
-PKG_VERSION:=1.0.0
+PKG_VERSION:=3.8.5
 PKG_RELEASE:=20220324
 
 PKG_MAINTAINER:=panda-mute <wxuzju@gmail.com>
