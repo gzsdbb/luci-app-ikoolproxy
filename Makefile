@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ikoolproxy
-PKG_VERSION:=3.8.5
+PKG_VERSION:=1.0.0
 PKG_RELEASE:=20220324
 
 PKG_MAINTAINER:=panda-mute <wxuzju@gmail.com>
@@ -15,7 +15,7 @@ define Package/$(PKG_NAME)/conffiles
 /usr/share/koolproxy/data/rules/
 endef
 
-define Package/koolproxy/install
+define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/share/koolproxy
 
 ifeq ($(ARCH),aarch64)
