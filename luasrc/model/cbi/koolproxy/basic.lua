@@ -99,7 +99,7 @@ e.inputtitle = translate("更新规则")
 e.inputstyle = "reload"
 e.write = function()
 	luci.sys.call("/usr/share/koolproxy/kpupdate 2>&1 >/dev/null")
-	luci.http.redirect(luci.dispatcher.build_url("admin","services","koolproxy"))
+	luci.http.redirect(luci.dispatcher.build_url("admin","services","koolproxy/update_log"))
 end
 e.description = translate(string.format("<font color=\"red\"><strong>更新订阅规则信息</strong></font><br /><font color=\"green\">KP静态规则:%s	 /%s条<br />视频规则: %s /%s<br />每日规则:%s条<br />自定义规则: %s条<br />AdGuard规则: %s /%s条<br />Steven规则: %s /%s条<br />Yhosts规则: %s /%s条<br />AntiAD规则: %s /%s条<br />Banben规则: %s /%s条<br />Host: %s条</font><br />", aa1,aa2,ab1,ab2,ac2,ad2,b1,b2,c1,c2,d1,d2,e1,e2,f1,f2,g2 ))
 
